@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:15
+    restart: always
+
+    # Change the following environment variables as needed
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: superuser
+      POSTGRES_DB: mydatabase
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+
+    # Change the following environment variables as needed
+    environment:
+      DATABASE_URL: postgresql://postgres:superuser@db:5432/mydatabase
+      
+      # For development
+      CORS_ORIGINS: http://localhost,http://localhost:3000,http://yourdomain.com
+      # For production
+      # CORS_ORIGINS: https://example.com,https://www.example.com
+
+    ports:
+    - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    ports:
+    - "3000:3000"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+volumes:
+  pgdata:
